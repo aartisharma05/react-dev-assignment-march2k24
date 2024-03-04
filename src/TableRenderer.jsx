@@ -19,13 +19,19 @@ const TableRenderer = () => {
 
   // Implement your own functions according to the usecase
 
-  const getData = async (req, res) => {
+  const getData = async () => {
     try {
-      console.log("here");
       const response = await fetch(
         "https://jsonplaceholder.typicode.com/users"
       );
       const data = await response.json();
+
+      setData(data);
+
+      if (data.length > 0) {
+        setColumns(Object.keys(data[0]));
+      }
+      console.log(columns);
       console.log(data);
     } catch (error) {
       console.log(error);
@@ -35,13 +41,66 @@ const TableRenderer = () => {
   useEffect(() => {
     getData();
   }, []);
+
+  const handleColumnCheckboxChange = (column, checked) => {
+    if (checked) {
+      setSelectedColumns([...selectedColumns, column]);
+    } else {
+      setSelectedColumns(selectedColumns.filter((col) => col !== column));
+    }
+  };
+
   return (
     <div>
       {/* Implement Checkboxes */}
+      {columns.map((colName, index) => {
+        return (
+          <Checkbox
+            key={index}
+            onChange={(e) =>
+              handleColumnCheckboxChange(colName, e.target.checked)
+            }
+          >
+            {colName}
+          </Checkbox>
+        );
+      })}
+
       {/* Implement submit button - only after clicking this button and selecting the above checkboxes, the data must be populated to the table */}
+
+      <Button
+        onClick={() => {
+          // Filter data based on selected columns
+          setFilteredData(
+            data.map((item) =>
+              selectedColumns.reduce((acc, key) => {
+                acc[key] = item[key];
+                return acc;
+              }, {})
+            )
+          );
+        }}
+      >
+        Submit
+      </Button>
+
       {/* Implement Search */}
 
-      <Table dataSource={filteredData} columns={selectedColumns} />
+      {/* <Input.Search
+        placeholder="Search"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        onSearch={(value) => {
+          return 
+        }}
+        style={{ width: 200, marginLeft: 10 }}
+      /> */}
+
+      <Table
+        dataSource={filteredData}
+        key={data.id}
+        columns={selectedColumns.map((col) => ({ title: col, dataIndex: col }))}
+      />
     </div>
   );
 };
